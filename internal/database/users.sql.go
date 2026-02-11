@@ -51,11 +51,11 @@ func (q *Queries) GetUserByName(ctx context.Context, name string) (User, error) 
 	return i, err
 }
 
-const resetUser = `-- name: ResetUser :exec
+const resetUsers = `-- name: ResetUsers :exec
 DELETE FROM users
 `
 
-func (q *Queries) ResetUser(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, resetUser)
+func (q *Queries) ResetUsers(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, resetUsers)
 	return err
 }
