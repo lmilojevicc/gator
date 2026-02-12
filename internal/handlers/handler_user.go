@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"context"
@@ -6,21 +6,23 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/lmilojevicc/gator/internal/cli"
 	"github.com/lmilojevicc/gator/internal/database"
+	"github.com/lmilojevicc/gator/internal/state"
 )
 
-func handlerLogin(s *state, cmd command) error {
+func HandlerLogin(s *state.State, cmd cli.Command) error {
 	if len(cmd.Arguments) == 0 {
 		return fmt.Errorf("usage: %s <username>", cmd.Name)
 	}
 
 	username := cmd.Arguments[0]
-	dbUser, err := s.db.GetUserByName(context.Background(), username)
+	dbUser, err := s.DB.GetUserByName(context.Background(), username)
 	if err != nil {
 		return fmt.Errorf("getting user: %w", err)
 	}
 
-	err = s.cfg.SetUser(dbUser.Name)
+	err = s.Cfg.SetUser(dbUser.Name)
 	if err != nil {
 		return fmt.Errorf("set user: %w", err)
 	}
@@ -28,14 +30,14 @@ func handlerLogin(s *state, cmd command) error {
 	return nil
 }
 
-func handlerRegister(s *state, cmd command) error {
+func HandlerRegister(s *state.State, cmd cli.Command) error {
 	if len(cmd.Arguments) == 0 {
 		return fmt.Errorf("usage: %s <username>", cmd.Name)
 	}
 
 	username := cmd.Arguments[0]
 
-	dbUser, err := s.db.CreateUser(context.Background(), database.CreateUserParams{
+	dbUser, err := s.DB.CreateUser(context.Background(), database.CreateUserParams{
 		ID:   uuid.New(),
 		Name: username,
 	})
@@ -43,7 +45,7 @@ func handlerRegister(s *state, cmd command) error {
 		return fmt.Errorf("creating user: %w", err)
 	}
 
-	err = s.cfg.SetUser(dbUser.Name)
+	err = s.Cfg.SetUser(dbUser.Name)
 	if err != nil {
 		return fmt.Errorf("writing user to config: %w", err)
 	}
@@ -51,8 +53,8 @@ func handlerRegister(s *state, cmd command) error {
 	return nil
 }
 
-func handlerReset(s *state, cmd command) error {
-	err := s.db.ResetUsers(context.Background())
+func HandlerReset(s *state.State, cmd cli.Command) error {
+	err := s.DB.ResetUsers(context.Background())
 	if err != nil {
 		return fmt.Errorf("reseting users: %w", err)
 	}
@@ -60,13 +62,13 @@ func handlerReset(s *state, cmd command) error {
 	return nil
 }
 
-func handlerUsers(s *state, cmd command) error {
-	dbUsers, err := s.db.GetUsers(context.Background())
+func HandlerUsers(s *state.State, cmd cli.Command) error {
+	dbUsers, err := s.DB.GetUsers(context.Background())
 	if err != nil {
 		return fmt.Errorf("getting users: %w", err)
 	}
 
-	currentUser := s.cfg.CurrentUserName
+	currentUser := s.Cfg.CurrentUserName
 	for _, user := range dbUsers {
 		if user.Name == currentUser {
 			fmt.Printf("* %s (current)\n", user.Name)

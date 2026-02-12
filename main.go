@@ -7,14 +7,12 @@ import (
 
 	_ "github.com/lib/pq"
 
+	"github.com/lmilojevicc/gator/internal/cli"
 	"github.com/lmilojevicc/gator/internal/config"
 	"github.com/lmilojevicc/gator/internal/database"
+	"github.com/lmilojevicc/gator/internal/handlers"
+	"github.com/lmilojevicc/gator/internal/state"
 )
-
-type state struct {
-	db  *database.Queries
-	cfg *config.Config
-}
 
 func main() {
 	cfg, err := config.Read()
@@ -29,19 +27,19 @@ func main() {
 
 	dbQueries := database.New(db)
 
-	programState := &state{
-		cfg: &cfg,
-		db:  dbQueries,
+	programState := state.State{
+		Cfg: &cfg,
+		DB:  dbQueries,
 	}
 
-	cmds := commands{
-		registeredCommands: make(map[string]func(*state, command) error),
+	cmds := cli.Commands{
+		RegisteredCommands: make(map[string]func(*state.State, cli.Command) error),
 	}
 
-	cmds.register("login", handlerLogin)
-	cmds.register("register", handlerRegister)
-	cmds.register("reset", handlerReset)
-	cmds.register("users", handlerUsers)
+	cmds.Register("login", handlers.HandlerLogin)
+	cmds.Register("register", handlers.HandlerRegister)
+	cmds.Register("reset", handlers.HandlerReset)
+	cmds.Register("users", handlers.HandlerUsers)
 
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: cli <command> [args...]")
@@ -50,7 +48,7 @@ func main() {
 	cmdName := os.Args[1]
 	cmdArgs := os.Args[2:]
 
-	err = cmds.run(programState, command{Name: cmdName, Arguments: cmdArgs})
+	err = cmds.Run(&programState, cli.Command{Name: cmdName, Arguments: cmdArgs})
 	if err != nil {
 		log.Fatal(err)
 	}
