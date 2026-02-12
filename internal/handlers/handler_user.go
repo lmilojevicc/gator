@@ -12,7 +12,7 @@ import (
 )
 
 func HandlerLogin(s *state.State, cmd cli.Command) error {
-	if len(cmd.Arguments) == 0 {
+	if len(cmd.Arguments) != 1 {
 		return fmt.Errorf("usage: %s <username>", cmd.Name)
 	}
 
@@ -31,7 +31,7 @@ func HandlerLogin(s *state.State, cmd cli.Command) error {
 }
 
 func HandlerRegister(s *state.State, cmd cli.Command) error {
-	if len(cmd.Arguments) == 0 {
+	if len(cmd.Arguments) != 1 {
 		return fmt.Errorf("usage: %s <username>", cmd.Name)
 	}
 
