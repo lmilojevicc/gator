@@ -43,7 +43,7 @@ func HandlerAddFeed(s *state.State, cmd cli.Command) error {
 	feedName := cmd.Arguments[0]
 	feedURL := cmd.Arguments[1]
 
-	err = s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+	createdFeed, err := s.DB.CreateFeed(context.Background(), database.CreateFeedParams{
 		ID:     uuid.New(),
 		Name:   feedName,
 		Url:    feedURL,
@@ -51,6 +51,15 @@ func HandlerAddFeed(s *state.State, cmd cli.Command) error {
 	})
 	if err != nil {
 		return fmt.Errorf("creating feed: %w", err)
+	}
+
+	_, err = s.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:     uuid.New(),
+		UserID: dbUser.ID,
+		FeedID: createdFeed.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("creating follow for created feed: %w", err)
 	}
 
 	return nil

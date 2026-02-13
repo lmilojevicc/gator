@@ -11,9 +11,10 @@ import (
 	"github.com/google/uuid"
 )
 
-const createFeed = `-- name: CreateFeed :exec
+const createFeed = `-- name: CreateFeed :one
 INSERT INTO feeds (id, name, url, user_id)
 VALUES ($1, $2, $3, $4)
+RETURNING id, name, url, user_id
 `
 
 type CreateFeedParams struct {
@@ -23,14 +24,21 @@ type CreateFeedParams struct {
 	UserID uuid.UUID
 }
 
-func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) error {
-	_, err := q.db.ExecContext(ctx, createFeed,
+func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {
+	row := q.db.QueryRowContext(ctx, createFeed,
 		arg.ID,
 		arg.Name,
 		arg.Url,
 		arg.UserID,
 	)
-	return err
+	var i Feed
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Url,
+		&i.UserID,
+	)
+	return i, err
 }
 
 const getAllFeeds = `-- name: GetAllFeeds :many
@@ -63,4 +71,21 @@ func (q *Queries) GetAllFeeds(ctx context.Context) ([]Feed, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getFeedByURL = `-- name: GetFeedByURL :one
+SELECT id, name, url, user_id FROM feeds
+WHERE url = $1
+`
+
+func (q *Queries) GetFeedByURL(ctx context.Context, url string) (Feed, error) {
+	row := q.db.QueryRowContext(ctx, getFeedByURL, url)
+	var i Feed
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Url,
+		&i.UserID,
+	)
+	return i, err
 }
