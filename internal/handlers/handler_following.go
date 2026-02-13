@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -52,6 +53,33 @@ func HandlerFollowing(s *state.State, cmd cli.Command, dbUser database.User) err
 	for _, feed := range dbFeedsFollowed {
 		fmt.Printf("  * %q\n", feed.FeedName)
 	}
+
+	return nil
+}
+
+func HandlerUnfollow(s *state.State, cmd cli.Command, dbUser database.User) error {
+	if len(cmd.Arguments) != 1 {
+		return fmt.Errorf("usage: %s <feed_name>", cmd.Name)
+	}
+
+	feedURL := cmd.Arguments[0]
+	dbFeed, err := s.DB.GetFeedByURL(context.Background(), feedURL)
+	if err != nil {
+		return fmt.Errorf("getting feed by url: %w", err)
+	}
+
+	_, err = s.DB.Unfollow(context.Background(), database.UnfollowParams{
+		FeedID: dbFeed.ID,
+		UserID: dbUser.ID,
+	})
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("no feed with url: %s", feedURL)
+	}
+	if err != nil {
+		return fmt.Errorf("unfollowing feed: %w", err)
+	}
+
+	fmt.Printf("You have successfully unfollowed %q", dbFeed.Name)
 
 	return nil
 }
