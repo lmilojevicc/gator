@@ -11,17 +11,12 @@ import (
 	"github.com/lmilojevicc/gator/internal/state"
 )
 
-func HandlerFollow(s *state.State, cmd cli.Command) error {
+func HandlerFollow(s *state.State, cmd cli.Command, dbUser database.User) error {
 	if len(cmd.Arguments) != 1 {
 		return fmt.Errorf("usage: %s <url>", cmd.Name)
 	}
 
 	feedURL := cmd.Arguments[0]
-
-	dbUser, err := s.DB.GetUserByName(context.Background(), s.Cfg.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("getting user: %w", err)
-	}
 
 	dbFeed, err := s.DB.GetFeedByURL(context.Background(), feedURL)
 	if err != nil {
@@ -42,12 +37,7 @@ func HandlerFollow(s *state.State, cmd cli.Command) error {
 	return nil
 }
 
-func HandlerFollowing(s *state.State, cmd cli.Command) error {
-	dbUser, err := s.DB.GetUserByName(context.Background(), s.Cfg.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("getting user: %w", err)
-	}
-
+func HandlerFollowing(s *state.State, cmd cli.Command, dbUser database.User) error {
 	dbFeedsFollowed, err := s.DB.GetFeedFollowsForUser(context.Background(), dbUser.ID)
 	if err != nil {
 		return fmt.Errorf("getting feeds followed by user: %w", err)

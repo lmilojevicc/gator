@@ -29,15 +29,9 @@ func HandlerAggregate(s *state.State, cmd cli.Command) error {
 	return nil
 }
 
-func HandlerAddFeed(s *state.State, cmd cli.Command) error {
+func HandlerAddFeed(s *state.State, cmd cli.Command, dbUser database.User) error {
 	if len(cmd.Arguments) != 2 {
 		return fmt.Errorf("usage: %s <name> <url>", cmd.Name)
-	}
-
-	currentUser := s.Cfg.CurrentUserName
-	dbUser, err := s.DB.GetUserByName(context.Background(), currentUser)
-	if err != nil {
-		return fmt.Errorf("getting user: %w", err)
 	}
 
 	feedName := cmd.Arguments[0]

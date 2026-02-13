@@ -11,6 +11,7 @@ import (
 	"github.com/lmilojevicc/gator/internal/config"
 	"github.com/lmilojevicc/gator/internal/database"
 	"github.com/lmilojevicc/gator/internal/handlers"
+	"github.com/lmilojevicc/gator/internal/middleware"
 	"github.com/lmilojevicc/gator/internal/state"
 )
 
@@ -41,10 +42,10 @@ func main() {
 	cmds.Register("reset", handlers.HandlerReset)
 	cmds.Register("users", handlers.HandlerUsers)
 	cmds.Register("agg", handlers.HandlerAggregate)
-	cmds.Register("addfeed", handlers.HandlerAddFeed)
+	cmds.Register("addfeed", middleware.LoggedIn(handlers.HandlerAddFeed))
 	cmds.Register("feeds", handlers.HandlerFeeds)
-	cmds.Register("follow", handlers.HandlerFollow)
-	cmds.Register("following", handlers.HandlerFollowing)
+	cmds.Register("follow", middleware.LoggedIn(handlers.HandlerFollow))
+	cmds.Register("following", middleware.LoggedIn(handlers.HandlerFollowing))
 
 	if len(os.Args) < 2 {
 		log.Fatalf("Usage: cli <command> [args...]")
