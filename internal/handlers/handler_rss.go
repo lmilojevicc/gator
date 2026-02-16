@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,11 +29,12 @@ func HandlerAggregate(s *state.State, cmd cli.Command) error {
 	}
 
 	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
 	for ; ; <-ticker.C {
-		scrapeFeeds(s)
+		if err := scrapeFeeds(s); err != nil {
+			fmt.Fprintf(os.Stderr, "Error scraping feeds: %v\n", err)
+		}
 	}
-
-	return nil
 }
 
 func HandlerAddFeed(s *state.State, cmd cli.Command, dbUser database.User) error {
@@ -111,11 +114,78 @@ func scrapeFeeds(s *state.State) error {
 	}
 
 	for _, item := range feed.Channel.Items {
-		fmt.Printf("%s\n", item.Title)
+		publishedAt, err := parsePubDate(item.PubDate)
+		if err != nil {
+			fmt.Printf("Warning: skipping item %q with bad date: %v\n", item.Title, err)
+			continue
+		}
+
+		_, err = qtx.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			Title:       sql.NullString{String: item.Title, Valid: item.Title != ""},
+			Url:         item.Link,
+			Description: sql.NullString{String: item.Description, Valid: item.Description != ""},
+			PublishedAt: sql.NullTime{Time: publishedAt, Valid: !publishedAt.IsZero()},
+			FeedID:      nextFeedToFetch.ID,
+		})
+
+		if err == sql.ErrNoRows {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("creating post: %w", err)
+		}
 	}
 
-	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("commiting transaction: %w", err)
+	return tx.Commit()
+}
+
+func parsePubDate(dateStr string) (time.Time, error) {
+	formats := []string{
+		time.RFC1123,  // "Mon, 02 Jan 2006 15:04:05 MST"
+		time.RFC1123Z, // "Mon, 02 Jan 2006 15:04:05 -0700"
+		time.RFC3339,  // ISO 8601: "2006-01-02T15:04:05Z07:00"
+		"2006-01-02T15:04:05Z",
+		"Mon, 2 Jan 2006 15:04:05 MST",
+		"02 Jan 2006 15:04:05 MST",
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateStr); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
+}
+
+func HandlerBrowse(s *state.State, cmd cli.Command, user database.User) error {
+	limit := int32(2)
+
+	if len(cmd.Arguments) == 1 {
+		parsed, err := strconv.Atoi(cmd.Arguments[0])
+		if err != nil {
+			return fmt.Errorf("invalid limit: %w", err)
+		}
+		limit = int32(parsed)
+	}
+
+	dbPosts, err := s.Queries.GetPostsByUser(context.Background(), database.GetPostsByUserParams{
+		UserID: user.ID,
+		Limit:  limit,
+	})
+	if err != nil {
+		return fmt.Errorf("getting posts: %w", err)
+	}
+
+	for _, post := range dbPosts {
+		var date string
+		if post.PublishedAt.Valid {
+			date = post.PublishedAt.Time.Format("2006-01-02")
+		} else {
+			date = "unknown"
+		}
+		fmt.Printf("%s posted on %s\n", post.Title.String, date)
 	}
 
 	return nil
