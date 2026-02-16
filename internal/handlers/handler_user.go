@@ -17,7 +17,7 @@ func HandlerLogin(s *state.State, cmd cli.Command) error {
 	}
 
 	username := cmd.Arguments[0]
-	dbUser, err := s.DB.GetUserByName(context.Background(), username)
+	dbUser, err := s.Queries.GetUserByName(context.Background(), username)
 	if err != nil {
 		return fmt.Errorf("getting user: %w", err)
 	}
@@ -37,7 +37,7 @@ func HandlerRegister(s *state.State, cmd cli.Command) error {
 
 	username := cmd.Arguments[0]
 
-	dbUser, err := s.DB.CreateUser(context.Background(), database.CreateUserParams{
+	dbUser, err := s.Queries.CreateUser(context.Background(), database.CreateUserParams{
 		ID:   uuid.New(),
 		Name: username,
 	})
@@ -54,7 +54,7 @@ func HandlerRegister(s *state.State, cmd cli.Command) error {
 }
 
 func HandlerReset(s *state.State, cmd cli.Command) error {
-	err := s.DB.ResetUsers(context.Background())
+	err := s.Queries.ResetUsers(context.Background())
 	if err != nil {
 		return fmt.Errorf("reseting users: %w", err)
 	}
@@ -63,7 +63,7 @@ func HandlerReset(s *state.State, cmd cli.Command) error {
 }
 
 func HandlerUsers(s *state.State, cmd cli.Command) error {
-	dbUsers, err := s.DB.GetUsers(context.Background())
+	dbUsers, err := s.Queries.GetUsers(context.Background())
 	if err != nil {
 		return fmt.Errorf("getting users: %w", err)
 	}

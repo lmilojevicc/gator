@@ -19,12 +19,12 @@ func HandlerFollow(s *state.State, cmd cli.Command, dbUser database.User) error 
 
 	feedURL := cmd.Arguments[0]
 
-	dbFeed, err := s.DB.GetFeedByURL(context.Background(), feedURL)
+	dbFeed, err := s.Queries.GetFeedByURL(context.Background(), feedURL)
 	if err != nil {
 		return fmt.Errorf("getting feed: %w", err)
 	}
 
-	dbFeedFollow, err := s.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+	dbFeedFollow, err := s.Queries.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
 		ID:     uuid.New(),
 		UserID: dbUser.ID,
 		FeedID: dbFeed.ID,
@@ -39,7 +39,7 @@ func HandlerFollow(s *state.State, cmd cli.Command, dbUser database.User) error 
 }
 
 func HandlerFollowing(s *state.State, cmd cli.Command, dbUser database.User) error {
-	dbFeedsFollowed, err := s.DB.GetFeedFollowsForUser(context.Background(), dbUser.ID)
+	dbFeedsFollowed, err := s.Queries.GetFeedFollowsForUser(context.Background(), dbUser.ID)
 	if err != nil {
 		return fmt.Errorf("getting feeds followed by user: %w", err)
 	}
@@ -63,12 +63,12 @@ func HandlerUnfollow(s *state.State, cmd cli.Command, dbUser database.User) erro
 	}
 
 	feedURL := cmd.Arguments[0]
-	dbFeed, err := s.DB.GetFeedByURL(context.Background(), feedURL)
+	dbFeed, err := s.Queries.GetFeedByURL(context.Background(), feedURL)
 	if err != nil {
 		return fmt.Errorf("getting feed by url: %w", err)
 	}
 
-	_, err = s.DB.Unfollow(context.Background(), database.UnfollowParams{
+	_, err = s.Queries.Unfollow(context.Background(), database.UnfollowParams{
 		FeedID: dbFeed.ID,
 		UserID: dbUser.ID,
 	})

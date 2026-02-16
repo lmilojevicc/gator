@@ -18,9 +18,9 @@ func LoggedIn(handler authenticationHandler) func(*state.State, cli.Command) err
 			return fmt.Errorf("user must be logged in")
 		}
 
-		dbUser, err := s.DB.GetUserByName(context.Background(), currentUser)
+		dbUser, err := s.Queries.GetUserByName(context.Background(), currentUser)
 		if err != nil {
-			return fmt.Errorf("getting uesr: %w", err)
+			return fmt.Errorf("getting user: %w", err)
 		}
 
 		return handler(s, cmd, dbUser)

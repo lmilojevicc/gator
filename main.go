@@ -29,8 +29,9 @@ func main() {
 	dbQueries := database.New(db)
 
 	programState := state.State{
-		Cfg: &cfg,
-		DB:  dbQueries,
+		Cfg:     &cfg,
+		Queries: dbQueries,
+		Conn:    db,
 	}
 
 	cmds := cli.Commands{
