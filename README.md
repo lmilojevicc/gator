@@ -216,10 +216,10 @@ gator/
 
 ```mermaid
 erDiagram
-    users ||--o{ feeds : "creates"
-    users ||--o{ feed_follows : "follows"
-    feeds ||--o{ feed_follows : "followed_by"
-    feeds ||--o{ posts : "contains"
+users ||--o{ feeds : creates
+users ||--o{ feed_follows : follows
+feeds ||--o{ feed_follows : followed_by
+feeds ||--o{ posts : contains
 
     users {
         uuid id PK
@@ -240,11 +240,11 @@ erDiagram
 
     feed_follows {
         uuid id PK
-        uuid user_id FK
-        uuid feed_id FK
+        uuid user_id FK "UNIQUE with feed_id"
+        uuid feed_id FK "UNIQUE with user_id"
         timestamp created_at
         timestamp updated_at
-        unique(user_id, feed_id)
+        %% UNIQUE(user_id, feed_id)
     }
 
     posts {
@@ -257,4 +257,5 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
+
 ```
