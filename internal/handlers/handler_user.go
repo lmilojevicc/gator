@@ -37,17 +37,12 @@ func HandlerRegister(s *state.State, cmd cli.Command) error {
 
 	username := cmd.Arguments[0]
 
-	dbUser, err := s.Queries.CreateUser(context.Background(), database.CreateUserParams{
+	_, err := s.Queries.CreateUser(context.Background(), database.CreateUserParams{
 		ID:   uuid.New(),
 		Name: username,
 	})
 	if err != nil {
 		return fmt.Errorf("creating user: %w", err)
-	}
-
-	err = s.Cfg.SetUser(dbUser.Name)
-	if err != nil {
-		return fmt.Errorf("writing user to config: %w", err)
 	}
 
 	return nil

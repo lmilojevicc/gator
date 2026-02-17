@@ -185,7 +185,8 @@ func HandlerBrowse(s *state.State, cmd cli.Command, user database.User) error {
 		} else {
 			date = "unknown"
 		}
-		fmt.Printf("%s posted on %s\n", post.Title.String, date)
+		fmt.Printf("%q posted on %s\n", post.Title.String, date)
+		fmt.Printf("Read at: %s\n\n", post.Url)
 	}
 
 	return nil
